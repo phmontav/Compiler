@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <boost/preprocessor.hpp>
+#include <algorithm>
 #define X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE(r, data, elem) \
     case elem:                                                             \
         return BOOST_PP_STRINGIZE(elem);
@@ -30,7 +31,7 @@ DEFINE_ENUM_WITH_STRING_CONVERSIONS(TokenType,
 class Token
 {
 public:
-    // TokenType tokenType;
+    TokenType tokenType;
     int value;
 };
 
@@ -39,15 +40,19 @@ class Lexer
 public:
     string text;
     vector<string> TokenTypeVector;
-    Lexer(string &text) : text(text) {}
+    Lexer(string &text)
+    {
+        this->text = text;
+        Lexer();
+    }
     Lexer()
     {
         for (int i = ARRAY; i <= UNKNOWN; i++)
         {
             TokenType e = static_cast<TokenType>(i);
             TokenTypeVector.push_back(ToString(e));
-            cout << TokenTypeVector.back() << endl;
         }
+        sort(TokenTypeVector.begin(), TokenTypeVector.end());
     }
 };
 
