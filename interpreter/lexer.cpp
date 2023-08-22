@@ -365,9 +365,13 @@ int main()
     lexer.input.open("input.txt", ifstream::in);
     string s;
     char c;
-    for(int i = 0; i < 10; i++){
+    do{
          lexer.nextToken();
-         cout << "Token: " << ToString(lexer.token) << ", Attribute" << lexer.tokenSecundario << endl;
-    }
+         cout << "Token: " << ToString(lexer.token);
+         if(lexer.token == ID){
+            cout << " , Attribute: " << lexer.tokenSecundario;
+         }
+         cout << endl;
+    } while(lexer.token != UNKNOWN);
     return 0;
 }
