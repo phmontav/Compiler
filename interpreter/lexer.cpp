@@ -3,7 +3,7 @@
 #include <vector>
 #include <boost/preprocessor.hpp>
 #include <algorithm>
-#include <string>
+#include <string.h>
 #include <unordered_map>
 #define X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE(r, data, elem) \
     case elem:                                                             \
@@ -35,132 +35,327 @@ DEFINE_ENUM_WITH_STRING_CONVERSIONS(TokenType,
                                     //simbolos
                                     (COLON)(SEMI_COLON)(COMMA)(EQUALS)(LEFT_SQUARE)(RIGHT_SQUARE)(LEFT_BRACES)(RIGHT_BRACES)(LEFT_PARENTHESIS)(RIGHT_PARENTHESIS)(AND)(OR)(LESS_THAN)(GREATER_THAN)(LESS_OR_EQUAL)(GREATER_OR_EQUAL)(NOT_EQUAL)(EQUAL_EQUAL)(PLUS)(PLUS_PLUS)(MINUS)(MINUS_MINUS)(TIMES)(DIVIDE)(DOT)(NOT)
                                     //tokens regulares
-                                    (CHARATER)(NUMERAL)(STRINGVAL)(ID)
+                                    (CHARACTER)(NUMERAL)(STRINGVAL)(ID)
                                     //token desconhecido
                                     (UNKNOWN))
 
-
-typedef unsigned char u_byte;
 typedef struct {
-    u_byte type; // 0-char, 1-int, 2- string
-    union {
+    byte type; // 0-char, 1-int, 2- string
+    union _{
         char cVal;
         int nVal;
         char * sVal;
     } _;
 } t_const;
 
-class Token{
-    public:
-        TokenType tokenType;
-        int value;
-};
-
 class Lexer{
-    public:
+public:
+    // Defina a tabela de identificadores como um mapa de hash que associa cada nome a um número inteiro
+    unordered_map<char*, int> names;
 
-        // Defina a tabela de identificadores como um mapa de hash que associa cada nome a um número inteiro
-        unordered_map<string, int> names;
+    // Defina a tabela de constantes como um vetor que armazena as estruturas t_const
+    vector<t_const> constants;
 
-        // Defina a tabela de constantes como um vetor que armazena as estruturas t_const
-        vector<t_const> constants;
+    // Definindo as constantes globais
+    const static int MAX_LENGTH = 256; // tamanho máximo de um lexema
+    const static int KEYWORDS_SIZE = 18; // número de palavras reservadas
+    const char* KEYWORDS[KEYWORDS_SIZE] = { // vetor de palavras reservadas ordenado alfabeticamente
+        "ARRAY", "BOOLEAN", "BREAK", "CHAR", "CONTINUE", "DO", "ELSE", "FALSE", 
+        "FUNCTION", "IF", "INTEGER", "OF", "STRING", "STRUCT", "TRUE", "TYPE", 
+        "VAR", "WHILE"
+    };
 
-        // Definindo as constantes globais
-        const static int MAX_LENGTH = 256; // tamanho máximo de um lexema
-        const static int KEYWORDS_SIZE = 18; // número de palavras reservadas
-        const string KEYWORDS[KEYWORDS_SIZE] = { // vetor de palavras reservadas ordenado alfabeticamente
-            "ARRAY", "BOOLEAN", "BREAK", "CHAR", "CONTINUE", "DO", "ELSE", "FALSE", 
-            "FUNCTION", "IF", "INTEGER", "OF", "STRING", "STRUCT", "TRUE", "TYPE", 
-            "VAR", "WHILE"
-        };
+    // Definindo as variáveis globais
+    ifstream input; // arquivo de entrada
+    ofstream output; // arquivo de saída
+    char nextChar = '\x20';
+    TokenType token;
+    int tokenSecundario;
 
-        // Definindo as variáveis globais
-        ifstream input; // arquivo de entrada
-        ofstream output; // arquivo de saída
-        char lexeme[MAX_LENGTH]; // buffer para armazenar o lexema atual
-        int line = 1; // contador de linhas
-        int column = 0; // contador de colunas
-
-        string text;
-        vector<string> TokenTypeVector;
-        Lexer(string &_text) {
-            this->text = _text;
-            Lexer();
-        }
-        Lexer() {
-            for (int i = ARRAY; i <= UNKNOWN; i++)
-            {
-                TokenType e = static_cast<TokenType>(i);
-                TokenTypeVector.push_back(ToString(e));
+    Lexer() = default;
+    // Função para buscar uma palavra na tabela de palavras reservadas
+    TokenType searchKeyWord(char* name) {
+        // Busca binária no vetor de palavras reservadas
+        int low = 0;
+        int high = KEYWORDS_SIZE - 1;
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            int cmp = strcmp(name, KEYWORDS[mid]);
+            if (cmp == 0) {
+                // Palavra encontrada, retorna o token correspondente
+                return (TokenType) mid;
             }
-            sort(TokenTypeVector.begin(), TokenTypeVector.end());
-        }
-        // Função para buscar uma palavra na tabela de palavras reservadas
-        TokenType searchKeyWord(string name) {
-            // Busca binária no vetor de palavras reservadas
-            int low = 0;
-            int high = KEYWORDS_SIZE - 1;
-            while (low <= high) {
-                int mid = (low + high) / 2;
-                int cmp = name.compare(KEYWORDS[mid]);
-                if (cmp == 0) {
-                    // Palavra encontrada, retorna o token correspondente
-                    return (TokenType) mid;
-                }
-                else if (cmp < 0) {
-                    // Palavra é menor que o elemento do meio, busca na metade inferior
-                    high = mid - 1;
-                }
-                else {
-                    // Palavra é maior que o elemento do meio, busca na metade superior
-                    low = mid + 1;
-                }
-            }
-            // Palavra não encontrada, retorna o token de identificador
-            
-            return ID;
-        }
-
-        // Função para buscar ou inserir um identificador na tabela de nomes
-        int searchName(string name) {
-            // Busca na tabela de nomes usando um algoritmo de hash
-            std::string key(name);
-            auto it = names.find(key);
-            if (it != names.end()) {
-                // Identificador encontrado, retorna o seu nome (token secundário)
-                return it->second;
+            else if (cmp < 0) {
+                // Palavra é menor que o elemento do meio, busca na metade inferior
+                high = mid - 1;
             }
             else {
-                // Identificador não encontrado, insere na tabela com um novo nome
-                int newName = static_cast<int>(names.size());
-                names[key] = newName;
-                return newName;
+                // Palavra é maior que o elemento do meio, busca na metade superior
+                low = mid + 1;
             }
         }
+        // Palavra não encontrada, retorna o token de identificador
+        return ID;
+    }
 
-        // Defina uma função para inserir uma constante na tabela de constantes e retornar seu índice no vetor
-        int insertConst( t_const c ) {
-            // Insere a constante no final do vetor de constantes
-            constants.push_back(c);
-            // Retorna o índice da constante inserida (igual ao tamanho atual do vetor menos um)
-            return static_cast<int>(constants.size()) - 1;
+    // Função para buscar ou inserir um identificador na tabela de nomes
+    int searchName(char* key) {
+        // Busca na tabela de nomes usando um algoritmo de hash
+        auto it = names.find(key);
+        if (it != names.end()) {
+            // Identificador encontrado, retorna o seu nome (token secundário)
+            return it->second;
         }
+        
+        // Identificador não encontrado, insere na tabela com um novo nome
+        int newName = static_cast<int>(names.size());
+        names[key] = newName;
+        return newName;
+    }
 
-        // Defina uma função para ler o próximo caractere do arquivo de entrada e retorná-lo
-        char nextChar() {
-            // Declara uma variável para armazenar o caractere lido
-            char c;
-            // Lê o próximo caractere do arquivo de entrada
-            input.get(c);
-            // Retorna o caractere lido
-            return c;
-        }
+    // Define uma função para inserir uma constante char na tabela de constantes e retornar seu índice no vetor
+    int addCharConst( char c ) {
+        //Cria constante com tipo especificado
+        t_const constant;
+        constant.type = static_cast<byte>(0);
+        constant._.cVal = c;
+        // Insere a constante no final do vetor de constantes
+        constants.push_back(constant);
+        // Retorna o índice da constante inserida (igual ao tamanho atual do vetor menos um)
+        return static_cast<int>(constants.size()) - 1;
+    }
+    
+    // Define uma função para inserir uma constante char na tabela de constantes e retornar seu índice no vetor
+    int addIntConst( int n ) {
+        //Cria constante com tipo especificado
+        t_const constant;
+        constant.type = static_cast<byte>(1);
+        constant._.nVal = n;
+        // Insere a constante no final do vetor de constantes
+        constants.push_back(constant);
+        // Retorna o índice da constante inserida (igual ao tamanho atual do vetor menos um)
+        return static_cast<int>(constants.size()) - 1;
+    }
 
-        // Defina uma função para retornar o último caractere lido para o arquivo de entrada
-        void backChar() {
-            // Volta uma posição no arquivo de entrada
-            input.unget();
+    // Define uma função para inserir uma constante char na tabela de constantes e retornar seu índice no vetor
+    int addStringConst( char* s ) {
+        //Cria constante com tipo especificado
+        t_const constant;
+        constant.type = static_cast<byte>(2);
+        constant._.sVal = s;
+        // Insere a constante no final do vetor de constantes
+        constants.push_back(constant);
+        // Retorna o índice da constante inserida (igual ao tamanho atual do vetor menos um)
+        return static_cast<int>(constants.size()) - 1;
+    }
+
+    //Recuperação do valor de uma constante a partir da sua posição
+    t_const getConst( int n ) {
+        // Retorna a constante através do índice fornecido
+        return constants[n];
+    }
+
+    // Defina uma função para ler o próximo caractere do arquivo de entrada e retorná-lo
+    char readChar() {
+        // Declara uma variável para armazenar o caractere lido
+        char c;
+        // Lê o próximo caractere do arquivo de entrada
+        input.get(c);
+        // Retorna o caractere lido
+        return c;
+    }
+
+    // Defina uma função para retornar o último caractere lido para o arquivo de entrada
+    void backChar() {
+        // Volta uma posição no arquivo de entrada
+        input.unget();
+    }
+
+    // Função para ler o próximo token do arquivo de entrada
+    TokenType nextToken() {
+        // loop do estado inicial para pular os separadores
+        while (isspace(nextChar)) {
+            nextChar = readChar();
         }
+        if (isalpha(nextChar)) { // se for uma letra
+            char text[MAX_LENGTH + 1]; // buffer para armazenar o lexema
+            int i = 0; // índice do buffer
+            do {
+                text[i++] = nextChar; // copia o caractere para o buffer
+                nextChar = readChar(); // lê o próximo caractere
+            } while (isalnum(nextChar) || nextChar == '_'); // enquanto for letra, dígito ou _
+            text[i] = '\0'; // termina a string com o caractere nulo
+            token = searchKeyWord(text); // busca na tabela de palavras reservadas
+            if (token == ID) { // se for um identificador
+                tokenSecundario = searchName(text); // busca ou insere na tabela de nomes
+            }
+        }
+        else if (isdigit(nextChar)) { // se for um dígito
+            char numeral[MAX_LENGTH + 1]; // buffer para armazenar o lexema
+            int i = 0; // índice do buffer
+            do {
+                numeral[i++] = nextChar; // copia o caractere para o buffer
+                nextChar = readChar(); // lê o próximo caractere
+            } while (isdigit(nextChar)); // enquanto for dígito
+            numeral[i] = '\0'; // termina a string com o caractere nulo
+            token = NUMERAL; // define o tipo do token como numeral
+            tokenSecundario = addIntConst(atoi(numeral)); // converte a string em inteiro e insere na tabela de constantes
+        }
+        else if (nextChar == '"') { // se for uma aspa dupla
+            char string[MAX_LENGTH + 1]; // buffer para armazenar o lexema
+            int i = 0; // índice do buffer
+            string[i++] = nextChar; // copia a aspa dupla inicial para o buffer
+            nextChar = readChar(); // lê o próximo caractere
+            while (nextChar != '"') { // enquanto não for outra aspa dupla
+                string[i++] = nextChar; // copia o caractere para o buffer
+                nextChar = readChar(); // lê o próximo caractere
+            }
+            string[i++] = nextChar; // copia a aspa dupla final para o buffer
+            string[i] = '\0'; // termina a string com o caractere nulo
+            token = STRINGVAL; // define o tipo do token como stringval
+            tokenSecundario = addStringConst(string); // insere a string na tabela de constantes
+        }
+        else switch (nextChar) { // se for um símbolo ou outro caractere inválido
+            case '\'':
+                nextChar = readChar();
+                token = CHARACTER;
+                tokenSecundario = addCharConst(nextChar);
+                nextChar = readChar(); // pular o '\''
+                nextChar = readChar();
+                break;
+            case ':':
+                nextChar = readChar();
+                token = COLON;
+                break;
+            case '+':
+                nextChar = readChar();
+                if (nextChar == '+') {
+                    token = PLUS_PLUS;
+                    nextChar = readChar();
+                }
+                else {
+                    token = PLUS;
+                }
+                break;
+            case ';':
+                nextChar = readChar();
+                token = SEMI_COLON;
+                break;
+            case ',':
+                nextChar = readChar();
+                token = COMMA;
+                break;
+            case '=':
+                nextChar = readChar();
+                if (nextChar == '=') {
+                    token = EQUAL_EQUAL;
+                    nextChar = readChar();
+                }
+                else {
+                    token = EQUALS;
+                }
+                break;
+            case '[':
+                nextChar = readChar();
+                token = LEFT_SQUARE;
+                break;
+            case ']':
+                nextChar = readChar();
+                token = RIGHT_SQUARE;
+                break;
+            case '{':
+                nextChar = readChar();
+                token = LEFT_BRACES;
+                break;
+            case '}':
+                nextChar = readChar();
+                token = RIGHT_BRACES;
+                break;
+            case '(':
+                nextChar = readChar();
+                token = LEFT_PARENTHESIS;
+                break;
+            case ')':
+                nextChar = readChar();
+                token = RIGHT_PARENTHESIS;
+                break;
+            case '&':
+                nextChar = readChar();
+                if (nextChar == '&') {
+                    token = AND;
+                    nextChar = readChar();
+                }
+                break;
+            case '|':
+                nextChar = readChar();
+                if (nextChar == '|') {
+                    token = OR;
+                    nextChar = readChar();
+                }
+                break;
+            case '<':
+                nextChar = readChar();
+                if (nextChar == '=') {
+                    token = LESS_OR_EQUAL;
+                    nextChar = readChar();
+                }
+                else if (nextChar == '>') {
+                    token = NOT_EQUAL;
+                    nextChar = readChar();
+                }
+                else {
+                    token = LESS_THAN;
+                }
+                break;
+            case '>':
+                nextChar = readChar();
+                if (nextChar == '=') {
+                    token = GREATER_OR_EQUAL;
+                    nextChar = readChar();
+                }
+                else {
+                    token = GREATER_THAN;
+                }
+                break;
+            case '-':
+                nextChar = readChar();
+                if (nextChar == '-') {
+                    token = MINUS_MINUS;
+                    nextChar = readChar();
+                }
+                else {
+                    token = MINUS;
+                }
+                break;
+            case '*':
+                nextChar = readChar();
+                token = TIMES;
+                break;
+            case '/':
+                nextChar = readChar();
+                token = DIVIDE;
+                break;
+            case '.':
+                nextChar = readChar();
+                token = DOT;
+                break;
+            case '!':
+                nextChar = readChar();
+                if (nextChar == '=') {
+                    token = NOT_EQUAL;
+                    nextChar = readChar();
+                }
+                else {
+                    token = NOT;
+                }
+                break;
+            // Aqui vão os casos para os tokens regulares e o token desconhecido...
+            default:
+                token = UNKNOWN;
+                break;
+        }
+        return token;
+    }
 };
 
 int main()
