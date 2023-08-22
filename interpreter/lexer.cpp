@@ -51,7 +51,7 @@ typedef struct {
 class Lexer{
 public:
     // Defina a tabela de identificadores como um mapa de hash que associa cada nome a um número inteiro
-    unordered_map<char*, int> names;
+    unordered_map<string, int> names;
 
     // Defina a tabela de constantes como um vetor que armazena as estruturas t_const
     vector<t_const> constants;
@@ -99,8 +99,9 @@ public:
     }
 
     // Função para buscar ou inserir um identificador na tabela de nomes
-    int searchName(char* key) {
+    int searchName(char* name) {
         // Busca na tabela de nomes usando um algoritmo de hash
+        string key(name);
         auto it = names.find(key);
         if (it != names.end()) {
             // Identificador encontrado, retorna o seu nome (token secundário)
@@ -186,7 +187,6 @@ public:
             } while (isalnum(nextChar) || nextChar == '_'); // enquanto for letra, dígito ou _
             text[i] = '\0'; // termina a string com o caractere nulo
             token = searchKeyWord(text); // busca na tabela de palavras reservadas
-            cout << nextChar << " " << token << "\n";
             if (token == ID) { // se for um identificador
                 tokenSecundario = searchName(text); // busca ou insere na tabela de nomes
             }
