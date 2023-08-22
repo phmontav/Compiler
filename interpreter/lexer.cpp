@@ -186,6 +186,7 @@ public:
             } while (isalnum(nextChar) || nextChar == '_'); // enquanto for letra, dígito ou _
             text[i] = '\0'; // termina a string com o caractere nulo
             token = searchKeyWord(text); // busca na tabela de palavras reservadas
+            cout << nextChar << " " << token << "\n";
             if (token == ID) { // se for um identificador
                 tokenSecundario = searchName(text); // busca ou insere na tabela de nomes
             }
@@ -360,5 +361,13 @@ public:
 
 int main()
 {
-    Lexer();
+    Lexer lexer;
+    lexer.input.open("input.txt", ifstream::in);
+    string s;
+    char c;
+    for(int i = 0; i < 10; i++){
+         lexer.nextToken();
+         cout << "Token: " << ToString(lexer.token) << ", Attribute" << lexer.tokenSecundario << endl;
+    }
+    return 0;
 }
