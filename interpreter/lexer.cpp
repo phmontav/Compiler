@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string.h>
 #include <unordered_map>
+#include <climits>
 #define X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE(r, data, elem) \
     case elem:                                                             \
         return BOOST_PP_STRINGIZE(elem);
@@ -161,15 +162,10 @@ public:
         // Declara uma variável para armazenar o caractere lido
         char c;
         // Lê o próximo caractere do arquivo de entrada
-        input.get(c);
+        if(input.get(c))
+            return c;
         // Retorna o caractere lido
-        return c;
-    }
-
-    // Defina uma função para retornar o último caractere lido para o arquivo de entrada
-    void backChar() {
-        // Volta uma posição no arquivo de entrada
-        input.unget();
+        return EOF;
     }
 
     // Função para ler o próximo token do arquivo de entrada
@@ -178,7 +174,11 @@ public:
         while (isspace(nextChar)) {
             nextChar = readChar();
         }
-        if (isalpha(nextChar)) { // se for uma letra
+        if(nextChar == EOF){
+            token = UNKNOWN;
+            tokenSecundario = INT_MAX;
+        }
+        else if (isalpha(nextChar)) { // se for uma letra
             char text[MAX_LENGTH + 1]; // buffer para armazenar o lexema
             int i = 0; // índice do buffer
             do {
@@ -364,14 +364,14 @@ int main()
     Lexer lexer;
     lexer.input.open("input.txt", ifstream::in);
     string s;
-    char c;
-    do{
-         lexer.nextToken();
-         cout << "Token: " << ToString(lexer.token);
-         if(lexer.token == ID){
+    while(true){
+        lexer.nextToken();
+        if(lexer.tokenSecundario == INT_MAX) break;
+        cout << "Token: " << ToString(lexer.token);
+        if(lexer.token == ID){
             cout << " , Attribute: " << lexer.tokenSecundario;
-         }
-         cout << endl;
-    } while(lexer.token != UNKNOWN);
+        }
+        cout << endl;
+    }
     return 0;
 }
