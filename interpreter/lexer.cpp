@@ -359,8 +359,7 @@ public:
     }
 };
 
-int main()
-{
+int main() {
     Lexer lexer;
     lexer.input.open("input.txt", ifstream::in);
     string s;
