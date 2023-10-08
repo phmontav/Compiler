@@ -38,7 +38,14 @@ DEFINE_ENUM_WITH_STRING_CONVERSIONS(TokenType,
                                     //tokens regulares
                                     (CHARACTER)(NUMERAL)(STRINGVAL)(ID)
                                     //token desconhecido
-                                    (UNKNOWN))
+                                    (UNKNOWN)
+                                    //End of File
+                                    (EndOF)
+                                    //Syntatic scope
+                                    (P)(LDE)(DE)(DF)(DT)(T)(DC)(LI)(LP)(B)(LDV)(LS)(DV)(S)(E)(LV)(L)(R)(Y)(F)(LE)
+                                    //Syntatic scope 2
+                                    (CHR)(STR)(NUM)(PLINHA)(M)(U)(IDD)(IDU)(NB)(MF)(MC)(NF)(MT)(ME)(MW)
+                                    )
 
 typedef struct {
     byte type; // 0-char, 1-int, 2- string
@@ -359,18 +366,18 @@ public:
     }
 };
 
-int main() {
-    Lexer lexer;
-    lexer.input.open("input.txt", ifstream::in);
-    string s;
-    while(true){
-        lexer.nextToken();
-        if(lexer.tokenSecundario == INT_MAX) break;
-        cout << "Token: " << ToString(lexer.token);
-        if(lexer.token == ID){
-            cout << " , Attribute: " << lexer.tokenSecundario;
-        }
-        cout << endl;
-    }
-    return 0;
-}
+// int main() {
+//     Lexer lexer;
+//     lexer.input.open("input.txt", ifstream::in);
+//     string s;
+//     while(true){
+//         lexer.nextToken();
+//         if(lexer.tokenSecundario == INT_MAX) break;
+//         cout << "Token: " << ToString(lexer.token);
+//         if(lexer.token == ID){
+//             cout << " , Attribute: " << lexer.tokenSecundario;
+//         }
+//         cout << endl;
+//     }
+//     return 0;
+// }
