@@ -1,13 +1,14 @@
 #include <variant>
 #include "classes.cpp"
+#include "error.cpp"
 #include <bits/stdc++.h>
 using namespace std;
 
 class Scope
 {
 public:
-    vector<Node *> SymbolTable;     // primeiro da lista encadeada
-    vector<Node *> SymbolTableLast; // ultimo da lista encadeada
+    vector<Object *> SymbolTable;     // primeiro da lista encadeada
+    vector<Object *> SymbolTableLast; // ultimo da lista encadeada
     int currentLevel = -1;
     int newBlock()
     {
@@ -25,70 +26,70 @@ public:
         return currentLevel;
     }
 
-    Node *define(int token_secundario)
+    Object *define(int token_secundario)
     {
-        Node *newNode = new Node();
-        newNode->token_secundario = token_secundario;
-        newNode->next = nullptr;
+        Object *newObject = new Object();
+        newObject->token_secundario = token_secundario;
+        newObject->next = nullptr;
         if (SymbolTable[currentLevel] == nullptr)
         {
-            SymbolTable[currentLevel] = newNode;
-            SymbolTableLast[currentLevel] = newNode;
+            SymbolTable[currentLevel] = newObject;
+            SymbolTableLast[currentLevel] = newObject;
         }
         else
         {
-            SymbolTableLast[currentLevel]->next = newNode;
-            SymbolTableLast[currentLevel] = newNode;
+            SymbolTableLast[currentLevel]->next = newObject;
+            SymbolTableLast[currentLevel] = newObject;
         }
-        return newNode;
+        return newObject;
     }
 
-    Node *search_in_level(int token_sec, int currLevel = -1)
+    Object *search_in_level(int token_sec, int currLevel = -1)
     { // funcao Search na apostila
         if (currentLevel == -1)
             return nullptr;
         if (currLevel == -1)
             currLevel = currentLevel;
-        Node *node = SymbolTable[currLevel];
-        while (node != nullptr)
+        Object *Object = SymbolTable[currLevel];
+        while (Object != nullptr)
         {
-            if (node->token_secundario == token_sec)
+            if (Object->token_secundario == token_sec)
                 break;
             else
-                node = node->next;
+                Object = Object->next;
         }
-        return node;
+        return Object;
     }
 
-    Node *search_in_all_levels(int token_sec)
+    Object *search_in_all_levels(int token_sec)
     { // funcao Find na apostila
-        Node *node = nullptr;
+        Object *Object = nullptr;
         for (int i = currentLevel; i >= 0; i--)
         {
-            node = search_in_level(token_sec, i);
-            if (node != nullptr && node->token_secundario == token_sec)
+            Object = search_in_level(token_sec, i);
+            if (Object != nullptr && Object->token_secundario == token_sec)
                 break;
         }
-        return node;
+        return Object;
     }
 
-    bool check_types(Node *t1, Node *t2) // CheckTypes
+    bool check_types(Object *t1, Object *t2) // CheckTypes
     {
         if (t1 == t2)
             return true;
-        if (t1 == universal_node || t2 == universal_node)
+        if (t1 == universal_object || t2 == universal_object)
             return true;
-        if (t1->type == UNIVERSAL_ || t2->type == UNIVERSAL_)
+        if (t1->kind == UNIVERSAL_ || t2->kind == UNIVERSAL_)
             return true;
-        if (t1->type == t2->type)
+        if (t1->kind == t2->kind)
         {
-            if (t1->type == ALIAS_TYPE_)
+            if (t1->kind == ALIAS_TYPE_)
             {
                 Alias t1_Alias = get<Alias>(t1->variant);
                 Alias t2_Alias = get<Alias>(t2->variant);
                 return check_types(t1_Alias.base_type, t2_Alias.base_type);
             }
-            if (t1->type == ARRAY_TYPE_)
+            if (t1->kind == ARRAY_TYPE_)
             {
                 Array t1_array = get<Array>(t1->variant);
                 Array t2_array = get<Array>(t2->variant);
@@ -97,12 +98,12 @@ public:
                     return check_types(t1_array.element_type, t2_array.element_type);
                 }
             }
-            else if (t1->type == STRUCT_TYPE_)
+            else if (t1->kind == STRUCT_TYPE_)
             {
                 Struct t1_struct = get<Struct>(t1->variant);
                 Struct t2_struct = get<Struct>(t2->variant);
-                Node *f1 = t1_struct.fields;
-                Node *f2 = t2_struct.fields;
+                Object *f1 = t1_struct.fields;
+                Object *f2 = t2_struct.fields;
                 while (f1 != nullptr && f2 != nullptr)
                 {
                     Field f1_field = get<Field>(f1->variant);
@@ -116,6 +117,64 @@ public:
         return false;
     }
 };
+
+void Error(int line, error_type error)
+{
+    bool has_err = true;
+    cout << "Line: " << line << " - ";
+    switch (error)
+    {
+    case ERR_NO_DECL:
+        printf("Variable not declared");
+        break;
+    case ERR_REDCL:
+        printf("Variable already declared");
+        break;
+    case ERR_TYPE_EXPECTED:
+        printf("Type not declared");
+        break;
+    case ERR_BOOL_TYPE_EXPECTED:
+        printf("Expected Type boolean");
+        break;
+    case ERR_INVALID_TYPE:
+        printf("Invalid Type for this operation");
+        break;
+    case ERR_TYPE_MISMATCH:
+        printf("Invalid Type for this operation");
+        break;
+    case ERR_KIND_NOT_STRUCT:
+        printf("Only Struct Types are allowed for this operation");
+        break;
+    case ERR_FIELD_NOT_DECL:
+        printf("Field not declared");
+        break;
+    case ERR_KIND_NOT_ARRAY:
+        printf("Only Array Types are allowed for this operation");
+        break;
+    case ERR_INVALID_INDEX_TYPE:
+        printf("Invalid Index for Array");
+        break;
+    case ERR_KIND_NOT_VAR:
+        printf("Only Var Types are allowed for this operation");
+        break;
+    case ERR_KIND_NOT_FUNCTION:
+        printf("Only Function Types are allowed for this operation");
+        break;
+    case ERR_TOO_FEW_ARGS:
+        printf("Number of parameters less than the specified value");
+        break;
+    case ERR_TOO_MANY_ARGS:
+        printf("Number of parameters greater than the specified value");
+        break;
+    case ERR_PARAM_TYPE:
+        printf("Invalid Specified Type");
+        break;
+    case ERR_RETURN_TYPE_MISMATCH:
+        printf("Return Type not compatible with the specified function return Type");
+        break;
+    }
+    printf("\n");
+}
 
 int main()
 {

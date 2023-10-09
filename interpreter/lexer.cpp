@@ -60,6 +60,7 @@ class Lexer{
 public:
     // Defina a tabela de identificadores como um mapa de hash que associa cada nome a um número inteiro
     unordered_map<string, int> names;
+    int line = 1;
 
     // Defina a tabela de constantes como um vetor que armazena as estruturas t_const
     vector<t_const> constants;
@@ -179,6 +180,8 @@ public:
     TokenType nextToken() {
         // loop do estado inicial para pular os separadores
         while (isspace(nextChar)) {
+            if (nextChar == '\n' || nextChar == '\r')
+                line++;
             nextChar = readChar();
         }
         if(nextChar == EOF){
