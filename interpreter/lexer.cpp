@@ -40,7 +40,7 @@ DEFINE_ENUM_WITH_STRING_CONVERSIONS(TokenType,
                                     //token desconhecido
                                     (UNKNOWN)
                                     //End of File
-                                    (EndOF)
+                                    (TOKEN_EOF)
                                     //Syntatic scope
                                     (P)(LDE)(DE)(DF)(DT)(T)(DC)(LI)(LP)(B)(LDV)(LS)(DV)(S)(E)(LV)(L)(R)(Y)(F)(LE)(ID)(TRUE)(FALSE)
                                     //Syntatic scope 2
@@ -185,8 +185,7 @@ public:
             nextChar = readChar();
         }
         if(nextChar == EOF){
-            token = UNKNOWN;
-            tokenSecundario = INT_MAX;
+            token = TOKEN_EOF;
         }
         else if (isalpha(nextChar)) { // se for uma letra
             char text[MAX_LENGTH + 1]; // buffer para armazenar o lexema
@@ -369,18 +368,17 @@ public:
     }
 };
 
-// int main() {
-//     Lexer lexer;
-//     lexer.input.open("input.txt", ifstream::in);
-//     string s;
-//     while(true){
-//         lexer.nextToken();
-//         if(lexer.tokenSecundario == INT_MAX) break;
-//         cout << "Token: " << ToString(lexer.token);
-//         if(lexer.token == ID){
-//             cout << " , Attribute: " << lexer.tokenSecundario;
-//         }
-//         cout << endl;
-//     }
-//     return 0;
-// }
+int main() {
+    Lexer lexer;
+    lexer.input.open("input.txt", ifstream::in);
+    string s;
+    do{
+        lexer.nextToken();
+        cout << "Token: " << ToString(lexer.token);
+        if(lexer.token == TOKEN_ID){
+            cout << " , Attribute: " << lexer.tokenSecundario;
+        }
+        cout << endl;
+    } while(lexer.token != TOKEN_EOF);
+    return 0;
+}
