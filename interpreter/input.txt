@@ -1,1 +1,2 @@
-IF(a < b) a = b;
+TYPE int = INTEGER
+TYPE intArray = ARRAY[10] OF int

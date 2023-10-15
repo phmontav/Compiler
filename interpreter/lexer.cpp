@@ -32,17 +32,17 @@ using namespace std;
 
 DEFINE_ENUM_WITH_STRING_CONVERSIONS(TokenType,
                                     //palavras reservadas
-                                    (ARRAY)(BOOLEAN)(BREAK)(CHAR)(CONTINUE)(DO)(ELSE)(FALSE)(FUNCTION)(IF)(INTEGER)(OF)(STRING)(STRUCT)(TRUE)(TYPE)(VAR)(WHILE)
+                                    (ARRAY)(BOOLEAN)(BREAK)(CHAR)(CONTINUE)(DO)(ELSE)(TOKEN_FALSE)(FUNCTION)(IF)(INTEGER)(OF)(STRING)(STRUCT)(TOKEN_TRUE)(TYPE)(VAR)(WHILE)
                                     //simbolos
                                     (COLON)(SEMI_COLON)(COMMA)(EQUALS)(LEFT_SQUARE)(RIGHT_SQUARE)(LEFT_BRACES)(RIGHT_BRACES)(LEFT_PARENTHESIS)(RIGHT_PARENTHESIS)(AND)(OR)(LESS_THAN)(GREATER_THAN)(LESS_OR_EQUAL)(GREATER_OR_EQUAL)(NOT_EQUAL)(EQUAL_EQUAL)(PLUS)(PLUS_PLUS)(MINUS)(MINUS_MINUS)(TIMES)(DIVIDE)(DOT)(NOT)
                                     //tokens regulares
-                                    (CHARACTER)(NUMERAL)(STRINGVAL)(ID)
+                                    (CHARACTER)(NUMERAL)(STRINGVAL)(TOKEN_ID)
                                     //token desconhecido
                                     (UNKNOWN)
                                     //End of File
                                     (EndOF)
                                     //Syntatic scope
-                                    (P)(LDE)(DE)(DF)(DT)(T)(DC)(LI)(LP)(B)(LDV)(LS)(DV)(S)(E)(LV)(L)(R)(Y)(F)(LE)
+                                    (P)(LDE)(DE)(DF)(DT)(T)(DC)(LI)(LP)(B)(LDV)(LS)(DV)(S)(E)(LV)(L)(R)(Y)(F)(LE)(ID)(TRUE)(FALSE)
                                     //Syntatic scope 2
                                     (CHR)(STR)(NUM)(PLINHA)(M)(U)(IDD)(IDU)(NB)(MF)(MC)(NF)(MT)(ME)(MW)
                                     )
@@ -103,7 +103,7 @@ public:
             }
         }
         // Palavra não encontrada, retorna o token de identificador
-        return ID;
+        return TOKEN_ID;
     }
 
     // Função para buscar ou inserir um identificador na tabela de nomes
@@ -194,7 +194,7 @@ public:
             } while (isalnum(nextChar) || nextChar == '_'); // enquanto for letra, dígito ou _
             text[i] = '\0'; // termina a string com o caractere nulo
             token = searchKeyWord(text); // busca na tabela de palavras reservadas
-            if (token == ID) { // se for um identificador
+            if (token == TOKEN_ID) { // se for um identificador
                 tokenSecundario = searchName(text); // busca ou insere na tabela de nomes
             }
         }

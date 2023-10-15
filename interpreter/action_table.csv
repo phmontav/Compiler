@@ -1,4 +1,4 @@
-State	integer	char	boolean	string	type	=	array	[	]	of	struct	{	}	;�	:	function	(	)	,�	var	if	else	while	do	break	continue	&&	||	<	>	<=	>=	==	!=	+	-	*	/	++	--	!	.	Id	true	false	c	s	n	$	P	P	LDE	DE	T	DT	DC	DF	LP	B	LDV	LS	DV	LI	S	U	M	E	L	R	Y	F	LE	LV	IDD	IDU	ID	TRUE	FALSE	CHR	STR	NUM	NB	MF	MC	NF	MT	ME	MW	
+State	INTEGER	CHAR	BOOLEAN	STRING	TYPE	=	ARRAY	[	]	OF	STRUCT	{	}	;	:	FUNCTION	(	)	,	VAR	IF	ELSE	WHILE	DO	BREAK	CONTINUE	&&	||	<	>	<=	>=	==	!=	+	-	*	/	++	--	!	.	TOKEN_ID	TOKEN_TRUE	TOKEN_FALSE	c	s	n	$	P	P	LDE	DE	T	DT	DC	DF	LP	B	LDV	LS	DV	LI	S	U	M	E	L	R	Y	F	LE	LV	IDD	IDU	ID	TRUE	FALSE	CHR	STR	NUM	NB	MF	MC	NF	MT	ME	MW	
 0	�	�	�	�	s7	�	�	�	�	�	�	�	�	�	�	s6	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	1	2	3	�	5	�	4	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�
 1	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	acc	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�
 2	�	�	�	�	s7	�	�	�	�	�	�	�	�	�	�	s6	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	r1	�	�	�	8	�	5	�	4	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�	�

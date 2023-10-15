@@ -11,18 +11,20 @@ vector<TokenType> LEFT =  {P,     LDE,	LDE,	DE,	    DE,	    T,	    T,	    T,    
 class Syntatic{
 public:
     vector<vector<string>> action;
-    stack<int> stack;
+    stack<int> Stack;
     unordered_map<string, int> token_column;
     Lexer lexer;
     int rows = 0, columns = 0;
 
-    Syntatic() : rows(0), columns(0) {};
+    Syntatic() : rows(0), columns(0) {
+        lexer.input.open("input.txt", ifstream::in);
+    };
 
     void syntax_error(){}
 
-    bool is_reduction(string do_action){ return (!do_action.empty() && do_action[0] == 's'); }
+    bool is_shift(string do_action){ return (!do_action.empty() && do_action[0] == 's'); }
 
-    bool is_shift(string do_action){ return (!do_action.empty() && do_action[0] == 'r'); }
+    bool is_reduction(string do_action){ return (!do_action.empty() && do_action[0] == 'r'); }
 
     int do_action(string read_action){ return stoi(read_action.substr(1, static_cast<int>(read_action.size()) - 1)); }
 
@@ -46,8 +48,8 @@ public:
             }
             action[rows].push_back(cur);
             rows++, columns++;
-            if(rows == 0){
-                for(int i = 0; i < columns; i++) token_column[action[rows][i]] = i;
+            if(rows == 1){
+                for(int i = 0; i < columns; i++) token_column[action[rows - 1][i]] = i;
             }
         }
     }
@@ -55,37 +57,43 @@ public:
     void do_analysis(){
         //check do while if it is finishing
         int state = 0;
-        stack.push(0);
+        Stack.push(0);
         TokenType readToken = lexer.nextToken();
         string read_action = action[state + 1][token_column[ToString(readToken)]];
-        while(read_action != "acc") {
+        while(read_action != "acc" || ToString(readToken)) {
+            cout << (state + 1) << " " << ToString(readToken) << " " << token_column[ToString(readToken)] << " " << read_action << endl;
+            cout << is_shift(read_action) << " " << is_reduction(read_action) << endl;
             if (is_shift(read_action)) {
                 state = do_action(read_action);
-                stack.push(state);
+                Stack.push(state);
                 readToken = lexer.nextToken();
             } else
             if (is_reduction(read_action)) {
                 int rule = do_action(read_action);
-                for(int i = 0; i < len[rule]; i++) stack.pop();
-                state = do_action(action[stack.top() + 1][token_column[ToString(LEFT[rule - 1])]]);
-                stack.push(state);
+                for(int i = 0; i < len[rule]; i++) Stack.pop();
+                state = do_action(action[Stack.top() + 1][token_column[ToString(LEFT[rule - 1])]]);
+                cout << read_action << " " << rule << " " << Stack.top() + 1 << " " << ToString(LEFT[rule - 1]) << endl;
+                Stack.push(state);
             } else {
                 syntax_error();
-                break;
+                // break;
             }
             read_action = action[state + 1][token_column[ToString(readToken)]];
+        // cout << (state + 1) << " " << ToString(readToken) << " " << token_column[ToString(readToken)] << " " << read_action << endl;
         }
     }
 };
 
-// int main(){
-//     Syntatic syntatic;
-//     syntatic.parse_csv();
-//     for(int i = 0; i < 182; i++){
-//         for(int j = 0; j < 89; j++){
-//             cout << syntatic.action[i][j] << " ";
-//         }
-//         cout << "\n";
-//     }
-//     return 0;
-// }
+int main(){
+    Syntatic syntatic;
+    syntatic.parse_csv();
+    // for(int i = 0; i < 182; i++){
+    //     for(int j = 0; j < 89; j++){
+    //         cout << "\t" << syntatic.action[i][j];
+    //     }
+    //     cout << "\n";
+    // }
+    // for(auto t : syntatic.token_column) cout << t.first << " " << t.second << "\n";
+    syntatic.do_analysis();
+    return 0;
+}
